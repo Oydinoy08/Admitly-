@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admitly — AI Personal Statement Mentor</title>
+<meta name="description" content="Admitly — insholaringizni 0 dan yozishga o‘rgatuvchi va 10 ballik mezon bo‘yicha baholovchi AI mentor platforma">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          paper: '#F7F4EC',
+          ink: '#211D17',
+          ink2: '#4A4438',
+          rule: '#DED5BE',
+          pen: '#AE3A2C',
+          pensoft: '#D98F7F',
+          sage: '#4C7A5C',
+          sagesoft: '#CFE0D2',
+          amber: '#C1852B',
+          ambersoft: '#EFD9AE',
+          slate: '#2B2E38',
+        },
+        fontFamily: {
+          serif: ['Lora', 'serif'],
+          body: ['Inter', 'sans-serif'],
+          hand: ['Caveat', 'cursive'],
+          mono: ['JetBrains Mono', 'monospace'],
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  html { scroll-behavior: smooth; }
+  body { font-feature-settings: "ss01"; }
+
+  /* Manuscript ruling — signature motif for the essay/paper subject */
+  .manuscript {
+    background-image: repeating-linear-gradient(
+      to bottom, transparent 0, transparent 35px, rgba(33,29,23,0.06) 35px, rgba(33,29,23,0.06) 36px
+    );
+  }
+
+  .redline {
+    text-decoration: underline;
+    text-decoration-color: #AE3A2C;
+    text-decoration-style: wavy;
+    text-decoration-thickness: 1.5px;
+  }
+
+  .pen-circle {
+    border: 2px solid #AE3A2C;
+    border-radius: 999px;
+  }
+
+  ::selection { background: #EFD9AE; color: #211D17; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal { opacity: 0; transform: translateY(14px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.in { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } }
+
+  .focus-ring:focus-visible { outline: 2px solid #AE3A2C; outline-offset: 3px; }
+
+  .score-fill { transition: width 1s cubic-bezier(.2,.8,.2,1); }
+
+  .flip-card { perspective: 1000px; }
+  .flip-inner { transition: transform .6s; transform-style: preserve-3d; }
+  .flip-card.flipped .flip-inner { transform: rotateY(180deg); }
+  .flip-front, .flip-back { backface-visibility: hidden; }
+  .flip-back { transform: rotateY(180deg); }
+
+  @keyframes pulse-soft { 0%,100% { opacity: .35 } 50% { opacity: .9 } }
+  .analyzing-dot { animation: pulse-soft 1s ease-in-out infinite; }
+
+  .annotate {
+    position: relative;
+  }
+  .annotate::before {
+    content: attr(data-note);
+    font-family: 'Caveat', cursive;
+    color: #AE3A2C;
+    font-size: 1.05rem;
+    position: absolute;
+    top: -1.6rem;
+    left: 0;
+  }
+
+  #hero-essay {
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  }
+</style>
+</head>
+
+<body class="bg-paper text-ink font-body antialiased">
+
+<!-- ===================== NAV ===================== -->
+<header class="fixed top-0 inset-x-0 z-50 backdrop-blur bg-paper/85 border-b border-rule">
+  <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="#top" class="font-serif font-semibold text-xl tracking-tight focus-ring rounded">
+      Admitly<span class="text-pen">.</span>
+    </a>
+    <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-ink2">
+      <a href="#evaluator" class="hover:text-pen transition-colors focus-ring rounded">Demo tahlil</a>
+      <a href="#steps" class="hover:text-pen transition-colors focus-ring rounded">Bosqichlar</a>
+      <a href="#matrix" class="hover:text-pen transition-colors focus-ring rounded">Baholash mezoni</a>
+      <a href="#evaluator" class="px-4 py-2 rounded-full bg-slate text-paper font-semibold hover:opacity-90 transition focus-ring">Try Demo</a>
+    </nav>
+    <button id="menu-toggle" aria-label="Menyu" aria-expanded="false" class="md:hidden w-10 h-10 grid place-items-center rounded-full border border-rule focus-ring">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </div>
+  <nav id="mobile-menu" class="md:hidden overflow-hidden max-h-0 opacity-0 transition-all duration-300">
+    <div class="flex flex-col gap-1 px-6 pb-4 text-sm font-medium text-ink2">
+      <a href="#evaluator" class="py-2 focus-ring rounded">Demo tahlil</a>
+      <a href="#steps" class="py-2 focus-ring rounded">Bosqichlar</a>
+      <a href="#matrix" class="py-2 focus-ring rounded">Baholash mezoni</a>
+    </div>
+  </nav>
+</header>
+
+<!-- ===================== HERO ===================== -->
+<section id="top" class="relative pt-40 pb-24 md:pt-48 md:pb-28 overflow-hidden">
+  <div class="max-w-6xl mx-auto px-6 grid lg:grid-cols-[1.1fr_0.9fr] gap-14 items-center">
+    <div>
+      <p class="font-mono text-xs uppercase tracking-[0.25em] text-pen mb-6 reveal">AI Personal Statement Mentor</p>
+      <h1 class="font-serif font-semibold text-5xl md:text-6xl leading-[1.05] tracking-tight reveal">
+        Your AI-powered Mentor for Crafting <span class="italic text-pen">Winning</span> Personal Statements
+      </h1>
+      <p class="mt-6 text-lg text-ink2 max-w-xl reveal">
+        Admitly — universitetga hujjat topshirayotgan talabalarga insholarni 0 dan yozishni bosqichma-bosqich
+        o‘rgatadi va tayyor matnni 10 ballik mezon asosida chuqur tahlil qiladi.
+      </p>
+      <div class="mt-9 flex flex-wrap gap-4 reveal">
+        <a href="#evaluator" class="px-6 py-3 rounded-full bg-pen text-paper font-semibold hover:-translate-y-0.5 transition-transform focus-ring">
+          Try Demo
+        </a>
+        <a href="#steps" class="px-6 py-3 rounded-full border border-ink/20 font-semibold hover:border-pen hover:text-pen transition-colors focus-ring">
+          Qanday ishlaydi?
+        </a>
+      </div>
+    </div>
+
+    <!-- Signature: a "graded manuscript page" preview -->
+    <div id="hero-essay" class="reveal relative bg-white rounded-lg border border-rule shadow-[0_20px_50px_-20px_rgba(33,29,23,0.25)] p-7 manuscript rotate-1">
+      <p class="font-serif text-[15px] leading-[35px] text-ink2">
+        Growing up in a small town, I never imagined that a single broken laptop would set the course of my
+        academic life. <span class="redline">It taught me</span> that curiosity, not equipment, is what drives
+        real learning...
+      </p>
+      <div class="absolute -right-4 top-10 pen-circle w-14 h-14 grid place-items-center bg-paper rotate-6">
+        <span class="font-hand text-2xl font-semibold text-pen">9</span>
+      </div>
+      <p class="font-hand text-lg text-pen absolute right-8 top-32 -rotate-2">strong opening!</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== INTERACTIVE ESSAY EVALUATOR ===================== -->
+<section id="evaluator" class="py-24 md:py-28 border-t border-rule bg-white">
+  <div class="max-w-5xl mx-auto px-6">
+    <div class="reveal mb-12 text-center">
+      <p class="font-mono text-xs uppercase tracking-[0.25em] text-pen mb-3">Demo Modul</p>
+      <h2 class="font-serif font-semibold text-3xl md:text-4xl">Interactive Essay Evaluator</h2>
+      <p class="mt-4 text-ink2 max-w-xl mx-auto">Insho matningizni joylashtiring — Admitly uni 4 ta mezon bo‘yicha tahlil qiladi.</p>
+    </div>
+
+    <div class="reveal grid md:grid-cols-[1fr_auto] gap-3 mb-3">
+      <span></span>
+      <button id="sample-btn" class="justify-self-end text-sm font-medium text-pen border border-pen/30 rounded-full px-4 py-2 hover:bg-pen/5 transition-colors focus-ring">
+        Namunaviy insho joylash
+      </button>
+    </div>
+
+    <div class="reveal">
+      <textarea id="essay-input" rows="10" placeholder="Insho matningizni shu yerga yozing yoki joylashtiring..."
+        class="w-full rounded-xl border border-rule bg-paper focus:bg-white p-5 font-serif text-[16px] leading-relaxed text-ink placeholder:text-ink2/50 focus-ring resize-y"></textarea>
+      <div class="flex items-center justify-between mt-2 text-xs text-ink2/70 font-mono">
+        <span id="word-count">0 so‘z</span>
+        <span id="essay-error" class="text-pen hidden">Iltimos, kamida 40 so‘zdan iborat matn kiriting.</span>
+      </div>
+    </div>
+
+    <div class="reveal mt-6 flex justify-center">
+      <button id="evaluate-btn" class="px-8 py-3.5 rounded-full bg-slate text-paper font-semibold hover:opacity-90 transition-transform hover:-translate-y-0.5 focus-ring">
+        Evaluate My Essay
+      </button>
+    </div>
+
+    <!-- Analyzing state -->
+    <div id="analyzing" class="hidden mt-10 flex items-center justify-center gap-2 text-ink2 font-mono text-sm">
+      <span class="analyzing-dot w-2 h-2 rounded-full bg-pen"></span>
+      <span class="analyzing-dot w-2 h-2 rounded-full bg-pen" style="animation-delay:.15s"></span>
+      <span class="analyzing-dot w-2 h-2 rounded-full bg-pen" style="animation-delay:.3s"></span>
+      <span class="ml-2">Admitly matningizni tahlil qilmoqda...</span>
+    </div>
+
+    <!-- Results -->
+    <div id="results" class="hidden mt-12">
+      <div class="flex flex-col sm:flex-row items-center gap-6 mb-10 justify-center">
+        <div class="pen-circle w-24 h-24 grid place-items-center shrink-0">
+          <span id="overall-score" class="font-hand text-4xl font-bold text-pen">8.4</span>
+        </div>
+        <div class="text-center sm:text-left">
+          <p class="font-serif font-semibold text-xl">Umumiy ball</p>
+          <p class="text-ink2 text-sm mt-1">10 balldan — 4 ta mezon o‘rtacha ko‘rsatkichi</p>
+        </div>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-x-10 gap-y-6 mb-12">
+        <div>
+          <div class="flex justify-between text-sm mb-1.5"><span class="font-medium">Clarity &amp; Structure</span><span id="score-clarity-label" class="font-mono text-ink2">0/10</span></div>
+          <div class="h-2 rounded-full bg-rule overflow-hidden"><div id="score-clarity" class="score-fill h-full rounded-full bg-pen w-0"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-sm mb-1.5"><span class="font-medium">Personal Story &amp; Impact</span><span id="score-story-label" class="font-mono text-ink2">0/10</span></div>
+          <div class="h-2 rounded-full bg-rule overflow-hidden"><div id="score-story" class="score-fill h-full rounded-full bg-sage w-0"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-sm mb-1.5"><span class="font-medium">Academic Motivation</span><span id="score-motivation-label" class="font-mono text-ink2">0/10</span></div>
+          <div class="h-2 rounded-full bg-rule overflow-hidden"><div id="score-motivation" class="score-fill h-full rounded-full bg-amber w-0"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-sm mb-1.5"><span class="font-medium">Grammar &amp; Tone</span><span id="score-grammar-label" class="font-mono text-ink2">0/10</span></div>
+          <div class="h-2 rounded-full bg-rule overflow-hidden"><div id="score-grammar" class="score-fill h-full rounded-full bg-slate w-0"></div></div>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-sagesoft/40 border border-sage/30 rounded-xl p-6">
+          <h3 class="font-serif font-semibold text-lg text-sage mb-3">Strengths</h3>
+          <ul id="strengths-list" class="space-y-2 text-sm text-ink2"></ul>
+        </div>
+        <div class="bg-pensoft/20 border border-pen/30 rounded-xl p-6">
+          <h3 class="font-serif font-semibold text-lg text-pen mb-3">Areas to Improve</h3>
+          <ul id="improve-list" class="space-y-2 text-sm text-ink2"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== STEP-BY-STEP MENTORSHIP ===================== -->
+<section id="steps" class="py-24 md:py-28 border-t border-rule">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="reveal mb-14 text-center">
+      <p class="font-mono text-xs uppercase tracking-[0.25em] text-pen mb-3">Mentorship System</p>
+      <h2 class="font-serif font-semibold text-3xl md:text-4xl">0 dan Insho Yozish — 4 Bosqich</h2>
+    </div>
+
+    <div class="grid md:grid-cols-4 gap-6">
+      <div class="reveal relative p-7 rounded-2xl border border-rule bg-white hover:border-pen/40 hover:-translate-y-1 transition-all">
+        <span class="font-hand text-3xl text-pen">01</span>
+        <h3 class="font-serif font-semibold text-xl mt-3">Brainstorming</h3>
+        <p class="text-sm text-ink2 mt-2 leading-relaxed">Hayotingizdagi eng ta'sirli lahzalarni va shaxsiy g‘oyalarni ochib beruvchi savollar orqali material to‘playsiz.</p>
+      </div>
+      <div class="reveal relative p-7 rounded-2xl border border-rule bg-white hover:border-pen/40 hover:-translate-y-1 transition-all">
+        <span class="font-hand text-3xl text-pen">02</span>
+        <h3 class="font-serif font-semibold text-xl mt-3">Structuring</h3>
+        <p class="text-sm text-ink2 mt-2 leading-relaxed">Tanlangan hikoyani mantiqiy va ta'sirchan tarzda tashkil etuvchi qoralama tuzilma yaratasiz.</p>
+      </div>
+      <div class="reveal relative p-7 rounded-2xl border border-rule bg-white hover:border-pen/40 hover:-translate-y-1 transition-all">
+        <span class="font-hand text-3xl text-pen">03</span>
+        <h3 class="font-serif font-semibold text-xl mt-3">Drafting</h3>
+        <p class="text-sm text-ink2 mt-2 leading-relaxed">Tuzilma asosida to‘liq qoralama matnni yozasiz — Admitly har bosqichda maslahat beradi.</p>
+      </div>
+      <div class="reveal relative p-7 rounded-2xl border border-rule bg-white hover:border-pen/40 hover:-translate-y-1 transition-all">
+        <span class="font-hand text-3xl text-pen">04</span>
+        <h3 class="font-serif font-semibold text-xl mt-3">Refining</h3>
+        <p class="text-sm text-ink2 mt-2 leading-relaxed">Til, ohang va aniqlikni sayqallab, insho universitet komissiyasi uchun tayyor holga keltiriladi.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 10-POINT EVALUATION MATRIX ===================== -->
+<section id="matrix" class="py-24 md:py-28 border-t border-rule bg-white">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="reveal mb-14 text-center">
+      <p class="font-mono text-xs uppercase tracking-[0.25em] text-pen mb-3">Baholash tizimi</p>
+      <h2 class="font-serif font-semibold text-3xl md:text-4xl">10-Point Evaluation Matrix</h2>
+      <p class="mt-4 text-ink2 max-w-xl mx-auto">Kartochkani bosing — har bir mezon nimani anglatishini ko‘rsatadi.</p>
+    </div>
+
+    <div id="matrix-grid" class="grid sm:grid-cols-2 md:grid-cols-5 gap-4"></div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="py-14 border-t border-rule">
+  <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+    <div class="text-center md:text-left">
+      <p class="font-serif font-semibold text-lg">Admitly</p>
+      <p class="text-sm text-ink2 mt-1">Loyiha muallifi — Oydinoy Abdumaxmudjonova</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="https://linkedin.com" target="_blank" rel="noopener" aria-label="LinkedIn" class="w-10 h-10 grid place-items-center rounded-full border border-rule hover:border-pen hover:text-pen transition-colors focus-ring">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 11.02-4.12 2.06 2.06 0 01-.02 4.12zM7.12 20.45H3.56V9h3.56v11.45z"/></svg>
+      </a>
+      <a href="https://github.com" target="_blank" rel="noopener" aria-label="GitHub" class="w-10 h-10 grid place-items-center rounded-full border border-rule hover:border-pen hover:text-pen transition-colors focus-ring">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.5 0-.24-.01-1.04-.01-1.88-2.78.62-3.37-1.21-3.37-1.21-.46-1.19-1.11-1.51-1.11-1.51-.9-.63.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.05 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.72 0 0 .84-.28 2.75 1.05a9.3 9.3 0 015 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.46.1 2.72.64.72 1.03 1.63 1.03 2.75 0 3.92-2.34 4.78-4.57 5.04.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.82 0 .28.18.6.69.5A10.26 10.26 0 0022 12.25C22 6.58 17.52 2 12 2z"/></svg>
+      </a>
+      <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram" class="w-10 h-10 grid place-items-center rounded-full border border-rule hover:border-pen hover:text-pen transition-colors focus-ring">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
+      </a>
+      <a href="https://t.me" target="_blank" rel="noopener" aria-label="Telegram" class="w-10 h-10 grid place-items-center rounded-full border border-rule hover:border-pen hover:text-pen transition-colors focus-ring">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M21.9 4.6L2.9 12c-1 .4-1 1.5.1 1.8l4.7 1.5 1.8 5.6c.2.7 1.1.9 1.6.4l2.6-2.4 4.6 3.4c.7.5 1.7.1 1.9-.7l3-15.4c.2-1-.7-1.9-1.3-1.6zM8.6 14.6l9-6.9c.3-.2.6.1.3.4l-7.4 7.1-.3 3.3-1.6-3.9z"/></svg>
+      </a>
+    </div>
+  </div>
+  <p class="text-center text-xs text-ink2/60 mt-8">&copy; <span id="year"></span> Admitly. Barcha huquqlar himoyalangan.</p>
+</footer>
+
+<script>
+  // ---------- Mobile menu ----------
+  const menuToggle = document.getElementById('menu-toggle');
+  const mobileMenu = document.getElementById('mobile-menu');
+  menuToggle.addEventListener('click', () => {
+    const open = mobileMenu.style.maxHeight && mobileMenu.style.maxHeight !== '0px';
+    mobileMenu.style.maxHeight = open ? '0px' : mobileMenu.scrollHeight + 'px';
+    mobileMenu.style.opacity = open ? '0' : '1';
+    menuToggle.setAttribute('aria-expanded', String(!open));
+  });
+  mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    mobileMenu.style.maxHeight = '0px';
+    mobileMenu.style.opacity = '0';
+  }));
+
+  // ---------- Scroll reveal ----------
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) { entry.target.classList.add('in'); io.unobserve(entry.target); }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // ---------- Sample essay ----------
+  const sampleEssay = `Growing up in a small town in Andijan, I never imagined that a single broken laptop would set the course of my academic life. When our family computer stopped working, I spent weeks trying to fix it myself, reading forums late into the night and testing every possible solution before finally understanding what had gone wrong. That small victory taught me something larger: that curiosity, not equipment, is what drives real learning.
+
+This experience pulled me toward economics and technology at once. I began to see banking systems not as abstract institutions but as networks that could be rebuilt, simplified, and made more accessible through code. Leading a team in a national hackathon, I helped design an AI admissions copilot that guided students who, like me, had no one to explain how university applications actually worked.
+
+I want to study Economics and Banking not simply to understand financial systems, but to redesign them for people who are usually left out of the conversation. My goal is to build tools that make opportunity a little less dependent on luck, and a little more dependent on effort.`;
+
+  document.getElementById('sample-btn').addEventListener('click', () => {
+    const ta = document.getElementById('essay-input');
+    ta.value = sampleEssay;
+    updateWordCount();
+    ta.focus();
+  });
+
+  // ---------- Word count ----------
+  const essayInput = document.getElementById('essay-input');
+  const wordCountEl = document.getElementById('word-count');
+  function wordsOf(text) { return text.trim().length ? text.trim().split(/\s+/) : []; }
+  function updateWordCount() {
+    wordCountEl.textContent = wordsOf(essayInput.value).length + ' so‘z';
+  }
+  essayInput.addEventListener('input', updateWordCount);
+
+  // ---------- Heuristic evaluation engine (demo) ----------
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+  function evaluateEssay(text) {
+    const words = wordsOf(text);
+    const wordCount = words.length;
+    const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
+    const sentenceCount = Math.max(sentences.length, 1);
+    const avgSentenceLen = wordCount / sentenceCount;
+    const paragraphs = text.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+    const lower = text.toLowerCase();
+    const uniqueWords = new Set(words.map(w => w.toLowerCase().replace(/[^a-z']/g, ''))).size;
+    const lexicalDiversity = uniqueWords / Math.max(wordCount, 1);
+
+    // Clarity & Structure — rewards multiple paragraphs and balanced sentence length
+    let clarity = 5;
+    clarity += clamp((paragraphs.length - 1) * 0.9, 0, 2.5);
+    const sentenceIdeal = 1 - Math.min(Math.abs(avgSentenceLen - 17) / 17, 1);
+    clarity += sentenceIdeal * 2.5;
+    clarity = clamp(clarity, 3, 10);
+
+    // Personal Story & Impact — first-person density + narrative markers
+    const firstPerson = (lower.match(/\b(i|my|me|myself)\b/g) || []).length;
+    const narrativeMarkers = (lower.match(/\b(when|remember|realized|learned|taught|moment|experience)\b/g) || []).length;
+    let story = 4 + Math.min(firstPerson / Math.max(wordCount, 1) * 60, 3) + Math.min(narrativeMarkers * 0.5, 3);
+    story = clamp(story, 3, 10);
+
+    // Academic Motivation — keyword presence
+    const motivationWords = (lower.match(/\b(study|research|university|degree|career|future|passion|goal|major|academic|program)\b/g) || []).length;
+    let motivation = 4 + Math.min(motivationWords * 0.7, 6);
+    motivation = clamp(motivation, 3, 10);
+
+    // Grammar & Tone — lexical diversity + reasonable length as a proxy
+    let grammar = 4 + lexicalDiversity * 6 + clamp((wordCount - 60) / 200, 0, 1.5);
+    grammar = clamp(grammar, 3, 10);
+
+    return {
+      clarity: Math.round(clarity * 10) / 10,
+      story: Math.round(story * 10) / 10,
+      motivation: Math.round(motivation * 10) / 10,
+      grammar: Math.round(grammar * 10) / 10,
+    };
+  }
+
+  const feedbackBank = {
+    clarity: {
+      strength: "Insho tuzilishi mantiqiy — kirish, asosiy qism va xulosa aniq ajralib turadi.",
+      improve: "Paragraflarni qisqaroq va har birini bitta g‘oyaga bag‘ishlangan holda qayta tashkil eting."
+    },
+    story: {
+      strength: "Shaxsiy hikoya ta'sirchan va o‘quvchini birinchi jumlalardanoq tortadi.",
+      improve: "Voqeani umumiy tasvirlash o‘rniga, aniq bir lahzaga chuqurroq to‘xtalib o‘ting."
+    },
+    motivation: {
+      strength: "Akademik maqsad va tanlangan yo‘nalish o‘rtasidagi bog‘liqlik yaxshi ko‘rsatilgan.",
+      improve: "Nega aynan shu dastur yoki universitetni tanlaganingizni yanada aniqroq izohlang."
+    },
+    grammar: {
+      strength: "Til boy va ohang insho janriga mos — jumlalar tabiiy o‘qiladi.",
+      improve: "Ba'zi jumlalar uzun va murakkab — ularni ikkiga bo‘lib, o‘qishni osonlashtiring."
+    }
+  };
+
+  document.getElementById('evaluate-btn').addEventListener('click', () => {
+    const text = essayInput.value;
+    const errorEl = document.getElementById('essay-error');
+    if (wordsOf(text).length < 40) {
+      errorEl.classList.remove('hidden');
+      essayInput.focus();
+      return;
+    }
+    errorEl.classList.add('hidden');
+
+    const analyzing = document.getElementById('analyzing');
+    const results = document.getElementById('results');
+    const btn = document.getElementById('evaluate-btn');
+
+    results.classList.add('hidden');
+    analyzing.classList.remove('hidden');
+    btn.disabled = true;
+    btn.classList.add('opacity-60');
+
+    setTimeout(() => {
+      const scores = evaluateEssay(text);
+      const overall = ((scores.clarity + scores.story + scores.motivation + scores.grammar) / 4).toFixed(1);
+
+      analyzing.classList.add('hidden');
+      results.classList.remove('hidden');
+      btn.disabled = false;
+      btn.classList.remove('opacity-60');
+
+      document.getElementById('overall-score').textContent = overall;
+
+      const map = { clarity: scores.clarity, story: scores.story, motivation: scores.motivation, grammar: scores.grammar };
+      Object.entries(map).forEach(([key, val]) => {
+        document.getElementById(`score-${key}-label`).textContent = `${val}/10`;
+        requestAnimationFrame(() => {
+          document.getElementById(`score-${key}`).style.width = (val / 10 * 100) + '%';
+        });
+      });
+
+      const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+      const strengths = sorted.slice(0, 2).map(([key]) => feedbackBank[key].strength);
+      const improve = [feedbackBank[sorted[sorted.length - 1][0]].improve];
+
+      const strengthsList = document.getElementById('strengths-list');
+      const improveList = document.getElementById('improve-list');
+      strengthsList.innerHTML = strengths.map(s => `<li class="flex gap-2"><span class="text-sage">✓</span><span>${s}</span></li>`).join('');
+      improveList.innerHTML = improve.map(s => `<li class="flex gap-2"><span class="text-pen">→</span><span>${s}</span></li>`).join('') +
+        `<li class="flex gap-2"><span class="text-pen">→</span><span>Xulosa qismida markazlashtirilgan yagona fikrni yana bir bor ta'kidlang.</span></li>`;
+
+      results.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 1400);
+  });
+
+  // ---------- 10-Point Evaluation Matrix ----------
+  const criteria = [
+    { title: 'Clarity & Structure', desc: 'Insho aniq kirish, rivojlanish va xulosaga ega bo‘lishi kerak.' },
+    { title: 'Personal Story & Impact', desc: 'Shaxsiy tajriba haqiqiy va ta\u2019sirchan tarzda yoritilishi kerak.' },
+    { title: 'Academic Motivation', desc: 'Tanlangan yo‘nalishga bo‘lgan qiziqish aniq asoslanishi kerak.' },
+    { title: 'Grammar & Tone', desc: 'Til xatosiz va insho janriga mos ohangda bo‘lishi kerak.' },
+    { title: 'Originality & Voice', desc: 'Muallifning noyob ovozi va nuqtai nazari sezilib turishi kerak.' },
+    { title: 'Specificity & Detail', desc: 'Umumiy gaplar o‘rniga aniq misol va detallar keltirilishi kerak.' },
+    { title: 'Coherence & Flow', desc: 'Fikrlar orasidagi o‘tishlar tabiiy va izchil bo‘lishi kerak.' },
+    { title: 'Relevance to Program', desc: 'Matn tanlangan dastur yoki universitetga mosligini ko‘rsatishi kerak.' },
+    { title: 'Critical Thinking', desc: 'Muallif o‘z tajribasidan xulosa chiqara olishi va tahlil qila olishi kerak.' },
+    { title: 'Overall Persuasiveness', desc: 'Insho, umuman olganda, o‘quvchini ishontira olishi kerak.' },
+  ];
+
+  const grid = document.getElementById('matrix-grid');
+  criteria.forEach((c, i) => {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'flip-card reveal text-left h-40 focus-ring rounded-2xl';
+    card.setAttribute('aria-label', c.title);
+    card.innerHTML = `
+      <div class="flip-inner relative w-full h-full">
+        <div class="flip-front absolute inset-0 rounded-2xl border border-rule bg-white p-5 flex flex-col justify-between">
+          <span class="font-mono text-xs text-pen">${String(i + 1).padStart(2, '0')}</span>
+          <h3 class="font-serif font-semibold text-base leading-snug">${c.title}</h3>
+        </div>
+        <div class="flip-back absolute inset-0 rounded-2xl border border-pen/40 bg-pensoft/15 p-5 flex items-center">
+          <p class="text-sm text-ink2 leading-relaxed">${c.desc}</p>
+        </div>
+      </div>
+    `;
+    card.addEventListener('click', () => card.classList.toggle('flipped'));
+    grid.appendChild(card);
+    io.observe(card);
+  });
+
+  // ---------- Footer year ----------
+  document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>
